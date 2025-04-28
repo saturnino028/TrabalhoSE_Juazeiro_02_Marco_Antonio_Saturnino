@@ -276,12 +276,14 @@ float valor_compativel(float valor_float)
 /**
  * @brief Identificar posição dos dígitos e imprimir código de cores com multiplicador correto
  */
-void printar_cores(uint16_t _valor_rx) 
+void printar_cores(uint16_t _valor_rx, ssd1306_t *ssd) 
 {
     uint16_t valor = _valor_rx;
     uint8_t primeiro_digito = 0, segundo_digito = 0;
     int tamanho = 0;
     uint32_t temp = valor;
+    char str_y[14]; // Buffer para armazenar a string
+    bool cor = true;
 
     // Conta quantos dígitos tem o valor
     while (temp > 0) {
@@ -341,4 +343,41 @@ void printar_cores(uint16_t _valor_rx)
         cores[primeira_cor],
         cores[segunda_cor],
         cores[multiplicador]);
+
+    
+    sprintf(str_y, "Val. %0.2f", valor_real);   // Converte o float em string
+    ssd1306_fill(ssd, !cor);                          // Limpa o display
+    ssd1306_rect(ssd, 3, 3, 122, 60, cor, !cor);      // Desenha um retângulo
+    ssd1306_draw_string(ssd, str_y,12,6);
+    ssd1306_draw_string(ssd, cores[primeira_cor], 26,26);
+    ssd1306_draw_string(ssd, cores[segunda_cor], 34,36);
+    ssd1306_draw_string(ssd, cores[multiplicador], 43,48);
+    ssd1306_send_data(ssd);
+
+    uint32_t matriz_cores[25] = {0};    
+    int i, pos = 0;
+
+    // Copia primeira cor
+    for(i = 0; i < 5; i++)
+        matriz_cores[pos++] = cores_resistores[primeira_cor][i];
+
+    // Copia segunda cor
+    for(i = 0; i < 5; i++)
+        matriz_cores[pos++] = cores_resistores[segunda_cor][i];
+
+    // Copia multiplicador
+    for(i = 0; i < 5; i++)
+        matriz_cores[pos++] = cores_resistores[multiplicador][i];
+
+    // Copia tolerância
+    for(i = 0; i < 5; i++)
+        matriz_cores[pos++] = 0xffff0000;
+
+    // Copia 5 vezes 0xff000000
+    for(i = 0; i < 5; i++)
+        matriz_cores[pos++] = 0xff000000;
+
+    desenhar_fig(apagado, 100);
+    sleep_ms(50);
+    desenhar_fig(matriz_cores, 10);
 }

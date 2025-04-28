@@ -12,9 +12,8 @@
 /******************* Variáveis Globais *******************/
 
 extern uint32_t open[25];
-extern uint32_t p_m_v_l_a[25];
-extern uint32_t v_a_v_c_b[25];
-extern uint32_t prata_e_dourado[25];
+extern uint32_t cores_resistores[11][5];
+extern uint32_t printar_linha[25];
 extern uint32_t apagado[25];
 
 /******************* Protótipo Funções *******************/

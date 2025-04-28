@@ -177,11 +177,32 @@ void ssd1306_draw_char(ssd1306_t *ssd, char c, uint8_t x, uint8_t y)
   {
     index = (c - 'a' + 37) * 8; // Para letras minúsculas (ajuste o deslocamento corretamente)
   }
+  else if (c == '.')
+  {
+    // Desenhando um ponto 5x5 e mais baixo
+    for (uint8_t i = 0; i < 5; ++i) {
+      for (uint8_t j = 0; j < 5; ++j) {
+        if (i == 2 && j == 2) {  // Coloca o ponto no centro (mais baixo)
+          ssd1306_pixel(ssd, x + i, y + j + 3, 1);  // Ajuste da altura para torná-lo mais baixo
+        }
+      }
+    }
+    return; // Após desenhar o ponto, não é necessário desenhar mais nada
+  }
+  else if (c == ',')
+  {
+    index = 64 * 8; // Supondo que a vírgula seja o próximo caractere
+  }
+  else if (c == '?')
+  {
+    index = 65 * 8; // Supondo que o ponto de interrogação seja o seguinte
+  }
   else
   {
     return; // Se o caractere não for suportado, sai da função
   }
 
+  // Desenha outros caracteres normalmente
   for (uint8_t i = 0; i < 8; ++i)
   {
     uint8_t line = font[index + i];

@@ -35,6 +35,6 @@ extern volatile uint16_t valor_maximo, valor_minimo;
 
 void init_sistema(ssd1306_t *ssd);
 void calibrar_ohmimtro(ssd1306_t *ssd);
-void printar_cores(uint16_t _valor_rx);
+void printar_cores(uint16_t _valor_rx, ssd1306_t *ssd);
 
 #endif //OHMIMETRO_H
