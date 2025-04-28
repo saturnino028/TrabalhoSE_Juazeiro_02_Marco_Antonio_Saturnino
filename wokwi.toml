@@ -1,0 +1,4 @@
+[wokwi]
+version = 1
+firmware = 'build/Ohmimetro_digital.uf2'
+elf = 'build/Ohmimetro_digital.elf'
