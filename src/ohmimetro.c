@@ -371,7 +371,7 @@ void printar_cores(uint16_t _valor_rx, ssd1306_t *ssd)
 
     // Copia tolerância
     for(i = 0; i < 5; i++)
-        matriz_cores[pos++] = 0xffff0000;
+        matriz_cores[pos++] = 0x0000d7ff;
 
     // Copia 5 vezes 0xff000000
     for(i = 0; i < 5; i++)
