@@ -243,16 +243,16 @@ const float serie_e24[] =
 
 const char* cores[] = 
 {
-    "Preto",  // 0
-    "Marrom", // 1
+    "Preto",    // 0
+    "Marrom",   // 1
     "Vermelho", // 2
-    "Laranja", // 3
-    "Amarelo", // 4
-    "Verde", // 5
-    "Azul", // 6
-    "Violeta", // 7
-    "Cinza", // 8
-    "Branco" // 9
+    "Laranja",  // 3
+    "Amarelo",  // 4
+    "Verde",    // 5
+    "Azul",     // 6
+    "Violeta",  // 7
+    "Cinza",    // 8
+    "Branco"    // 9
 };
 
 float valor_compativel(float valor_float)
@@ -267,67 +267,78 @@ float valor_compativel(float valor_float)
         float tolerancia = serie_e24[i] * 0.05f; // 5% de tolerância
         if (valor_float >= (serie_e24[i] - tolerancia) && valor_float <= (serie_e24[i] + tolerancia))
         {
-            return serie_e24[i]; // Retorna o valor da série correspondente
+            return serie_e24[i];
         }
     }
     return -1.0f; // Não encontrado
 }
 
 /**
- * @brief Identificar a posição do número e imprimir o código de cores
+ * @brief Identificar posição dos dígitos e imprimir código de cores com multiplicador correto
  */
 void printar_cores(uint16_t _valor_rx) 
 {
-    uint16_t teste = _valor_rx;
-    uint16_t valor_teste = 1, multiplicador = 0, numero;
-    uint8_t valor_pos[2];
+    uint16_t valor = _valor_rx;
+    uint8_t primeiro_digito = 0, segundo_digito = 0;
+    int tamanho = 0;
+    uint32_t temp = valor;
 
-    // Encontrar a quantidade de dígitos
-    while (teste >= 10) 
-    {
-        teste = teste / 10;
-        valor_teste = valor_teste * 10;
+    // Conta quantos dígitos tem o valor
+    while (temp > 0) {
+        temp /= 10;
+        tamanho++;
     }
 
-    while (valor_teste > 0) 
-    {
-        numero = _valor_rx / valor_teste;  // Pega o número mais significativo
-        _valor_rx = _valor_rx % valor_teste; // Remove o número mais significativo
-        multiplicador++;
-        if (multiplicador == 1)
-            valor_pos[0] = numero;
-        else if (multiplicador == 2)
-            valor_pos[1] = numero;
-        valor_teste = valor_teste / 10;  // Vai para o próximo dígito
-    }
-
-    // Parte inteira + parte decimal
-    float valor_float = (float)valor_pos[0] + (float)valor_pos[1] / 10.0;
-    
-    float resultado = valor_compativel(valor_float);
-    
-    if (resultado < 0) 
-    {
-        printf("Valor não compatível com a série E24.\n");
+    if (tamanho < 2) {
+        printf("Valor inválido para resistor.\n");
         return;
     }
 
-    // Agora imprimir o valor e o código de cores
-    printf("Resistor: %.1f ohms\n", resultado);
+    // Extrai o primeiro e segundo dígito
+    uint32_t divisor = (uint32_t)pow(10, tamanho - 1);
+    primeiro_digito = valor / divisor;
+    valor = valor % divisor;
+    divisor /= 10;
+    segundo_digito = valor / divisor;
 
-    int primeira_cor = (int)resultado; // parte inteira
-    int segunda_cor = (int)((resultado - primeira_cor) * 10.0f + 0.5f); // arredonda parte decimal
-    int faixa_multiplicador = multiplicador - 2; // Baseado no número de dígitos lidos - 2 dígitos para as bandas
+    // Valor base (ex: 4 + 3/10 = 4.3)
+    float valor_base = primeiro_digito + (float)segundo_digito / 10.0f;
 
-    // Correção especial para o caso de 10.0
-    if (resultado == 10.0f)
-    {
+    float base_serie = valor_compativel(valor_base);
+    if (base_serie < 0) {
+        printf("Valor não compatível com série E24.\n");
+        return;
+    }
+
+    // Agora calcula o multiplicador corretamente:
+    // valor_rx / base_serie dá 10 elevado a multiplicador
+    float fator = (float)_valor_rx / base_serie;
+    int multiplicador = (int)roundf(log10f(fator));
+
+    // Valor real corrigido
+    float valor_real = base_serie * powf(10, multiplicador);
+
+    // Mostra valor do resistor
+    if (valor_real >= 1000000.0f)
+        printf("Resistor: %.2fM ohms\n", valor_real / 1000000.0f);
+    else if (valor_real >= 1000.0f)
+        printf("Resistor: %.2fk ohms\n", valor_real / 1000.0f);
+    else
+        printf("Resistor: %.2f ohms\n", valor_real);
+
+    // Primeira, segunda, e multiplicador
+    int primeira_cor = (int)base_serie;
+    int segunda_cor = (int)((base_serie - primeira_cor) * 10.0f + 0.5f);
+
+    // Ajuste especial para 10.0
+    if (base_serie == 10.0f) {
         primeira_cor = 1;
         segunda_cor = 0;
+        multiplicador += 1; // compensa o 10
     }
 
     printf("Código de cores: %s, %s, %s\n", 
         cores[primeira_cor],
         cores[segunda_cor],
-        cores[faixa_multiplicador]);
+        cores[multiplicador]);
 }
