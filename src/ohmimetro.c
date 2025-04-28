@@ -170,6 +170,7 @@ void rotina_de_calibracao(ssd1306_t *ssd)
     valor_minimo = media;
 }
 
+
 /**
  * @brief função usada para calibrar o Ohmimetro
  */
@@ -188,7 +189,8 @@ void calibrar_ohmimtro(ssd1306_t *ssd)
     ssd1306_fill(ssd, !cor);
     ssd1306_draw_image(ssd, tecle_a);
     ssd1306_send_data(ssd); // Atualiza o display
-    sleep_ms(3000);
+    som_buz(1*KHz, 500);
+    sleep_ms(3500);
 
     while((!botao_a_flag) && ((agora-tempo)<10000))
         agora = to_ms_since_boot(get_absolute_time());
@@ -228,4 +230,104 @@ void calibrar_ohmimtro(ssd1306_t *ssd)
 
     gpio_put(LED_R, 0);
     gpio_put(LED_G, 0);
+}
+
+const float serie_e24[] = 
+{
+    1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4, 
+    2.7, 3.0, 3.3, 3.6, 3.9, 4.3, 4.7, 5.1, 5.6, 6.2, 
+    6.8, 7.5, 8.2, 9.1, 10.0
+};
+
+#define TAMANHO_SERIE (sizeof(serie_e24) / sizeof(serie_e24[0]))
+
+const char* cores[] = 
+{
+    "Preto",  // 0
+    "Marrom", // 1
+    "Vermelho", // 2
+    "Laranja", // 3
+    "Amarelo", // 4
+    "Verde", // 5
+    "Azul", // 6
+    "Violeta", // 7
+    "Cinza", // 8
+    "Branco" // 9
+};
+
+float valor_compativel(float valor_float)
+{
+    if (valor_float > 9.1f && valor_float < 11.0f)
+    {
+        return 10.0f; // Se estiver entre 9.1 e 11, consideramos como 10
+    }
+
+    for (int i = 0; i < TAMANHO_SERIE; i++)
+    {
+        float tolerancia = serie_e24[i] * 0.05f; // 5% de tolerância
+        if (valor_float >= (serie_e24[i] - tolerancia) && valor_float <= (serie_e24[i] + tolerancia))
+        {
+            return serie_e24[i]; // Retorna o valor da série correspondente
+        }
+    }
+    return -1.0f; // Não encontrado
+}
+
+/**
+ * @brief Identificar a posição do número e imprimir o código de cores
+ */
+void printar_cores(uint16_t _valor_rx) 
+{
+    uint16_t teste = _valor_rx;
+    uint16_t valor_teste = 1, multiplicador = 0, numero;
+    uint8_t valor_pos[2];
+
+    // Encontrar a quantidade de dígitos
+    while (teste >= 10) 
+    {
+        teste = teste / 10;
+        valor_teste = valor_teste * 10;
+    }
+
+    while (valor_teste > 0) 
+    {
+        numero = _valor_rx / valor_teste;  // Pega o número mais significativo
+        _valor_rx = _valor_rx % valor_teste; // Remove o número mais significativo
+        multiplicador++;
+        if (multiplicador == 1)
+            valor_pos[0] = numero;
+        else if (multiplicador == 2)
+            valor_pos[1] = numero;
+        valor_teste = valor_teste / 10;  // Vai para o próximo dígito
+    }
+
+    // Parte inteira + parte decimal
+    float valor_float = (float)valor_pos[0] + (float)valor_pos[1] / 10.0;
+    
+    float resultado = valor_compativel(valor_float);
+    
+    if (resultado < 0) 
+    {
+        printf("Valor não compatível com a série E24.\n");
+        return;
+    }
+
+    // Agora imprimir o valor e o código de cores
+    printf("Resistor: %.1f ohms\n", resultado);
+
+    int primeira_cor = (int)resultado; // parte inteira
+    int segunda_cor = (int)((resultado - primeira_cor) * 10.0f + 0.5f); // arredonda parte decimal
+    int faixa_multiplicador = multiplicador - 2; // Baseado no número de dígitos lidos - 2 dígitos para as bandas
+
+    // Correção especial para o caso de 10.0
+    if (resultado == 10.0f)
+    {
+        primeira_cor = 1;
+        segunda_cor = 0;
+    }
+
+    printf("Código de cores: %s, %s, %s\n", 
+        cores[primeira_cor],
+        cores[segunda_cor],
+        cores[faixa_multiplicador]);
 }

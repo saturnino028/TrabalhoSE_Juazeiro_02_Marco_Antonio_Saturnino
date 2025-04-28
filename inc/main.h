@@ -30,7 +30,6 @@
 #include "InterfacePio.pio.h"
 
 /***********************  Defines ***********************/
-#define resistor_conhecido 10000
 
 /******************* Variáveis Globais *******************/
 

@@ -43,6 +43,8 @@
         "pwm.h": "c",
         "prefixos_uteis.h": "c",
         "i2c.h": "c",
-        "funcoes_gpio.h": "c"
+        "funcoes_gpio.h": "c",
+        "cmath": "c",
+        "ohmimetro.h": "c"
     }
 }

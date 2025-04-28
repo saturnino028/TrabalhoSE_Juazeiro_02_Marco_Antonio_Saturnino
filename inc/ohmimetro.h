@@ -4,6 +4,7 @@
 
 #include "uart.h"
 #include "font.h"
+#include "math.h"
 #include <stdio.h>
 #include "pinout.h"
 #include "config.h"
@@ -34,5 +35,6 @@ extern volatile uint16_t valor_maximo, valor_minimo;
 
 void init_sistema(ssd1306_t *ssd);
 void calibrar_ohmimtro(ssd1306_t *ssd);
+void printar_cores(uint16_t _valor_rx);
 
 #endif //OHMIMETRO_H
