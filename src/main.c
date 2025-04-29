@@ -10,6 +10,8 @@ int main()
     char str_x[5]; // Buffer para armazenar a string
     char str_y[5]; // Buffer para armazenar a string
     bool aux = 1;
+    
+    ssd1306_fill(&ssd, !cor); // Limpa o display
 
     //Inicialização de hardware e software
     init_sistema(&ssd);

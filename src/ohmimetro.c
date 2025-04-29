@@ -339,6 +339,8 @@ void printar_cores(uint16_t _valor_rx, ssd1306_t *ssd)
         multiplicador += 1; // compensa o 10
     }
 
+    multiplicador = multiplicador-1;
+
     printf("Código de cores: %s, %s, %s\n", 
         cores[primeira_cor],
         cores[segunda_cor],
